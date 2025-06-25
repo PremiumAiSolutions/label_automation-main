@@ -143,23 +143,21 @@ def send_to_printnode(label_data, label_content):
         if label_data.get('label_file_type', '').lower() in ['zpl', 'epl']:
             content_type = "raw_base64"
         
-        # Create print job
-        printjob = {
-            "printer": printer_id,
-            "title": job_title,
-            "contentType": content_type,
-            "content": content_base64,
-            "options": {
-                "papersize": "4x6",  # Common shipping label size
+        # Submit print job using PrintNode's correct method
+        # According to PrintNode docs, use PrintJob() method, not printjob()
+        response = client.PrintJob(
+            printer=int(printer_id),
+            title=job_title,
+            job_type="pdf" if content_type == "pdf_base64" else "raw",
+            base64=content_base64,
+            options={
+                "paper": "4x6",  # Common shipping label size 
                 "color": False
             }
-        }
+        )
         
-        # Submit print job
-        response = client.printjob(printjob)
-        
-        if response and len(response) > 0:
-            job_id = response[0]
+        if response and hasattr(response, 'id'):
+            job_id = response.id
             logger.info(f"Print job submitted successfully. Job ID: {job_id}")
             return {
                 "success": True, 
@@ -168,7 +166,7 @@ def send_to_printnode(label_data, label_content):
                 "title": job_title
             }
         else:
-            logger.error("Failed to submit print job - no job ID returned")
+            logger.error("Failed to submit print job - no valid response")
             return {"success": False, "error": "Failed to submit print job"}
             
     except Exception as e:
@@ -187,16 +185,20 @@ def check_print_job_status(job_id):
     """
     try:
         client = get_printnode_client()
-        job = client.printjob(job_id)
+        job = client.printjobs(printjob=job_id)
         
-        logger.info(f"Print job {job_id} status: {job.get('state', 'unknown')}")
-        return {
-            "success": True,
-            "job_id": job_id,
-            "state": job.get('state', 'unknown'),
-            "created_at": job.get('createTimestamp'),
-            "printer_id": job.get('printer', {}).get('id')
-        }
+        if job and hasattr(job, 'state'):
+            logger.info(f"Print job {job_id} status: {job.state}")
+            return {
+                "success": True,
+                "job_id": job_id,
+                "state": job.state,
+                "created_at": job.create_timestamp if hasattr(job, 'create_timestamp') else None,
+                "printer_id": job.printer.id if hasattr(job, 'printer') and hasattr(job.printer, 'id') else None
+            }
+        else:
+            logger.warning(f"Could not retrieve job {job_id}")
+            return {"success": False, "error": f"Job {job_id} not found"}
         
     except Exception as e:
         logger.exception(f"Error checking print job status: {str(e)}")
