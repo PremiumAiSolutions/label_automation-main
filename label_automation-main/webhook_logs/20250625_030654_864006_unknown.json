@@ -1,0 +1,22 @@
+{
+  "id": "evt_test_12345",
+  "object": "Event",
+  "created_at": "2025-06-25T03:06:52.419992",
+  "updated_at": "2025-06-25T03:06:52.419992",
+  "description": "tracker.created",
+  "mode": "test",
+  "previous_attributes": {},
+  "pending_urls": [],
+  "completed_urls": [],
+  "result": {
+    "id": "trk_test_12345",
+    "object": "Tracker",
+    "mode": "test",
+    "tracking_code": "TEST_TRACKING_CODE_123",
+    "status": "in_transit",
+    "created_at": "2025-06-25T03:06:52.419992",
+    "updated_at": "2025-06-25T03:06:52.419992",
+    "carrier": "USPS",
+    "tracking_details": []
+  }
+}

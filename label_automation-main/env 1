@@ -1,0 +1,12 @@
+# Flask configuration
+SECRET_KEY=your-secure-key-here
+DEBUG=False
+PORT=5000
+
+# API keys
+EASYPOST_API_KEY=EZTKf0035f91a53f41e29d82b0e4683b8e00p0QRUXZgXoL09v7y0c59Pg
+PRINTNODE_API_KEY=KnX1-0ijdwV0azPj1NKIv1g1-U2mRXqppvMzlB3Bgx4
+PRINTNODE_PRINTER_ID=your-printer-id
+
+# Logging
+LOG_LEVEL=INFO
