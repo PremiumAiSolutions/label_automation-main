@@ -1,0 +1,123 @@
+{% extends "base.html" %}
+
+{% block title %}{{ action }} Account - Label Automation Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-{% if action == 'Create' %}plus{% else %}edit{% endif %} me-2"></i>
+                {{ action }} EasyPost Account
+            </h1>
+            <a href="{{ url_for('accounts') }}" class="btn btn-outline-secondary">
+                <i class="fas fa-arrow-left me-1"></i>Back to Accounts
+            </a>
+        </div>
+    </div>
+</div>
+
+<div class="row justify-content-center">
+    <div class="col-md-8">
+        <div class="card">
+            <div class="card-header">
+                <h5 class="card-title mb-0">Account Information</h5>
+            </div>
+            <div class="card-body">
+                <form method="post">
+                    <div class="mb-3">
+                        <label for="name" class="form-label">Account Name <span class="text-danger">*</span></label>
+                        <input type="text" class="form-control" id="name" name="name" 
+                               value="{{ account.name if account else '' }}" 
+                               placeholder="e.g., Main Store, Warehouse A" required>
+                        <div class="form-text">A friendly name to identify this EasyPost account</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="api_key" class="form-label">EasyPost API Key <span class="text-danger">*</span></label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="api_key" name="api_key" 
+                                   value="{{ account.api_key if account else '' }}" 
+                                   placeholder="EZAK_..." required>
+                            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('api_key')">
+                                <i class="fas fa-eye" id="api_key_icon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">
+                            Your EasyPost API key (starts with EZAK_ for production or EZTK_ for test)
+                            <br>
+                            <a href="https://www.easypost.com/account/api-keys" target="_blank" class="text-decoration-none">
+                                <i class="fas fa-external-link-alt me-1"></i>Get your API key from EasyPost Dashboard
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="webhook_secret" class="form-label">Webhook Secret (Optional)</label>
+                        <div class="input-group">
+                            <input type="password" class="form-control" id="webhook_secret" name="webhook_secret" 
+                                   value="{{ account.webhook_secret if account else '' }}" 
+                                   placeholder="Optional webhook signing secret">
+                            <button type="button" class="btn btn-outline-secondary" onclick="togglePassword('webhook_secret')">
+                                <i class="fas fa-eye" id="webhook_secret_icon"></i>
+                            </button>
+                        </div>
+                        <div class="form-text">Optional: Webhook signing secret for enhanced security</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="is_active" name="is_active" 
+                                   {% if not account or account.is_active %}checked{% endif %}>
+                            <label class="form-check-label" for="is_active">
+                                Active Account
+                            </label>
+                        </div>
+                        <div class="form-text">Inactive accounts will not process webhooks</div>
+                    </div>
+
+                    <div class="d-grid gap-2 d-md-flex justify-content-md-end">
+                        <a href="{{ url_for('accounts') }}" class="btn btn-outline-secondary me-md-2">Cancel</a>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="fas fa-save me-1"></i>{{ action }} Account
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        {% if action == 'Create' %}
+        <div class="card mt-4">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Next Steps</h6>
+            </div>
+            <div class="card-body">
+                <p class="mb-2">After creating your account, you'll need to:</p>
+                <ol class="mb-0">
+                    <li>Set up your printer configurations</li>
+                    <li>Configure the webhook in your EasyPost dashboard</li>
+                    <li>Test the integration with a sample shipment</li>
+                </ol>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+function togglePassword(fieldId) {
+    const field = document.getElementById(fieldId);
+    const icon = document.getElementById(fieldId + '_icon');
+    
+    if (field.type === 'password') {
+        field.type = 'text';
+        icon.className = 'fas fa-eye-slash';
+    } else {
+        field.type = 'password';
+        icon.className = 'fas fa-eye';
+    }
+}
+</script>
+{% endblock %} 

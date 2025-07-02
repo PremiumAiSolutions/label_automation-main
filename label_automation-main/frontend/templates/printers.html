@@ -1,0 +1,207 @@
+{% extends "base.html" %}
+
+{% block title %}Printers - Label Automation Management{% endblock %}
+
+{% block content %}
+<div class="row">
+    <div class="col-12">
+        <div class="d-flex justify-content-between align-items-center mb-4">
+            <h1>
+                <i class="fas fa-print me-2"></i>Printers
+                <small class="text-muted">for Account {{ account_id }}</small>
+            </h1>
+            <div class="btn-group">
+                <a href="{{ url_for('new_printer', account_id=account_id) }}" class="btn btn-primary">
+                    <i class="fas fa-plus me-1"></i>Add Printer
+                </a>
+                <a href="{{ url_for('accounts') }}" class="btn btn-outline-secondary">
+                    <i class="fas fa-arrow-left me-1"></i>Back to Accounts
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-body">
+                {% if printers %}
+                    <div class="table-responsive">
+                        <table class="table table-hover">
+                            <thead>
+                                <tr>
+                                    <th>Printer Name</th>
+                                    <th>PrintNode ID</th>
+                                    <th>API Key</th>
+                                    <th>Status</th>
+                                    <th>Created</th>
+                                    <th>Actions</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for printer in printers %}
+                                <tr>
+                                    <td>
+                                        <div class="d-flex align-items-center">
+                                            <strong>{{ printer.printer_name }}</strong>
+                                            {% if printer.is_default %}
+                                                <span class="badge bg-primary ms-2">Default</span>
+                                            {% endif %}
+                                        </div>
+                                        <small class="text-muted">ID: {{ printer.id }}</small>
+                                    </td>
+                                    <td>
+                                        <code>{{ printer.printer_id }}</code>
+                                    </td>
+                                    <td>
+                                        <code>{{ printer.printnode_api_key[:8] }}...{{ printer.printnode_api_key[-4:] if printer.printnode_api_key|length > 12 else printer.printnode_api_key }}</code>
+                                    </td>
+                                    <td>
+                                        {% if printer.is_active %}
+                                            <span class="badge bg-success">Active</span>
+                                        {% else %}
+                                            <span class="badge bg-secondary">Inactive</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        {% if printer.created_at %}
+                                            {{ printer.created_at[:10] }}
+                                        {% else %}
+                                            <span class="text-muted">Unknown</span>
+                                        {% endif %}
+                                    </td>
+                                    <td>
+                                        <div class="btn-group btn-group-sm">
+                                            <button type="button" class="btn btn-outline-info" 
+                                                    title="Test Printer"
+                                                    onclick="testPrinter('{{ printer.id }}')">
+                                                <i class="fas fa-print"></i>
+                                            </button>
+                                            <button type="button" class="btn btn-outline-primary" 
+                                                    title="Edit Printer"
+                                                    onclick="editPrinter('{{ printer.id }}')">
+                                                <i class="fas fa-edit"></i>
+                                            </button>
+                                            {% if not printer.is_default %}
+                                            <button type="button" class="btn btn-outline-success" 
+                                                    title="Make Default"
+                                                    onclick="makeDefault('{{ printer.id }}')">
+                                                <i class="fas fa-star"></i>
+                                            </button>
+                                            {% endif %}
+                                            <button type="button" class="btn btn-outline-danger" 
+                                                    title="Delete Printer"
+                                                    onclick="confirmDelete('{{ printer.id }}', '{{ printer.printer_name }}')">
+                                                <i class="fas fa-trash"></i>
+                                            </button>
+                                        </div>
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                {% else %}
+                    <div class="text-center py-5">
+                        <i class="fas fa-print fa-4x text-muted mb-3"></i>
+                        <h4>No printers configured</h4>
+                        <p class="text-muted">Add a printer to enable automatic label printing for this account</p>
+                        <a href="{{ url_for('new_printer', account_id=account_id) }}" class="btn btn-primary btn-lg">
+                            <i class="fas fa-plus me-2"></i>Add Your First Printer
+                        </a>
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% if printers %}
+<div class="row mt-4">
+    <div class="col-12">
+        <div class="card">
+            <div class="card-header">
+                <h6 class="card-title mb-0"><i class="fas fa-info-circle me-2"></i>Printer Configuration Help</h6>
+            </div>
+            <div class="card-body">
+                <div class="row">
+                    <div class="col-md-6">
+                        <h6>Finding your PrintNode Printer ID:</h6>
+                        <ol class="small">
+                            <li>Log into your PrintNode dashboard</li>
+                            <li>Go to the "Printers" section</li>
+                            <li>Find your printer and note the ID number</li>
+                        </ol>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>PrintNode API Key:</h6>
+                        <p class="small">
+                            You can use the same PrintNode API key for multiple printers, 
+                            or create separate keys for better security and monitoring.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<!-- Delete Confirmation Modal -->
+<div class="modal fade" id="deleteModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Confirm Deletion</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <p>Are you sure you want to delete the printer <strong id="printerName"></strong>?</p>
+                <p class="text-danger"><small>This action cannot be undone.</small></p>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deletePrinter()">Delete Printer</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script>
+let printerToDelete = null;
+
+function testPrinter(printerId) {
+    // TODO: Implement printer test functionality
+    alert('Printer test functionality will be implemented');
+}
+
+function editPrinter(printerId) {
+    // TODO: Implement printer edit functionality
+    alert('Printer edit functionality will be implemented');
+}
+
+function makeDefault(printerId) {
+    // TODO: Implement make default functionality
+    alert('Make default functionality will be implemented');
+}
+
+function confirmDelete(printerId, printerName) {
+    printerToDelete = printerId;
+    document.getElementById('printerName').textContent = printerName;
+    
+    const modal = new bootstrap.Modal(document.getElementById('deleteModal'));
+    modal.show();
+}
+
+function deletePrinter() {
+    if (printerToDelete) {
+        // TODO: Implement delete functionality
+        alert('Delete functionality will be implemented for printer: ' + printerToDelete);
+        bootstrap.Modal.getInstance(document.getElementById('deleteModal')).hide();
+    }
+}
+</script>
+{% endblock %} 

@@ -1,5 +1,6 @@
 from flask import Flask
 from app.webhook.router import webhook_bp
+from app.management.api import management_bp
 from app.config import Config
 from app.utils.logger import setup_logger
 
@@ -13,6 +14,7 @@ def create_app(config_class=Config):
     
     # Register blueprints
     app.register_blueprint(webhook_bp, url_prefix='/webhook')
+    app.register_blueprint(management_bp, url_prefix='/manage')
     
     @app.route('/health', methods=['GET'])
     def health_check():
